@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zipify - Ultimate Browser ZIP Converter</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.11.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tsparticles@2.11.1/tsparticles.bundle.min.js"></script>
+<style>
+* {margin:0;padding:0;box-sizing:border-box;}
+body {font-family:'Roboto',sans-serif; background:#121212; color:#fff; overflow-x:hidden;}
+
+/* Gradient Animated Background */
+body::before {
+  content:'';
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background: linear-gradient(270deg,#ff4d4d,#6a5acd,#1e90ff,#00ff7f);
+  background-size: 800% 800%;
+  z-index:-2;
+  animation: gradientBG 20s ease infinite;
+}
+@keyframes gradientBG {0%{background-position:0% 50%;}50%{background-position:100% 50%;}100%{background-position:0% 50%;}}
+
+/* Particle Background */
+#tsparticles {position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;}
+
+/* Container */
+.container {max-width:600px;margin:80px auto;padding:40px;background:rgba(0,0,0,0.8);border-radius:20px;box-shadow:0 0 30px rgba(0,0,0,0.5);text-align:center;}
+
+/* Logo */
+.logo {width:120px;height:120px;margin:0 auto 20px;background:url('logo.png') no-repeat center/contain;}
+
+/* Heading */
+h1 {font-size:2rem;margin-bottom:20px;color:#00ff7f;text-shadow:0 0 10px #00ff7f;}
+
+/* File Input + Drag & Drop */
+#drop-zone {padding:30px;border:2px dashed #00ff7f;border-radius:15px;margin-bottom:20px;cursor:pointer;transition:0.3s;}
+#drop-zone.dragover {background:rgba(0,255,127,0.1);}
+
+/* Input for custom ZIP name */
+input[type="text"] {padding:10px;border-radius:10px;border:none;width:60%;margin-bottom:20px;text-align:center;}
+
+/* Button */
+button {
+  padding:15px 30px;font-size:1rem;font-weight:700;color:#fff;
+  background:linear-gradient(90deg,#ff4d4d,#6a5acd,#1e90ff);
+  border:none;border-radius:10px;cursor:pointer;transition:0.3s;box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+button:hover {transform:scale(1.05);box-shadow:0 8px 20px rgba(0,0,0,0.5);}
+
+/* Progress Bar */
+#progress-container {width:100%;background:#1e1e1e;border-radius:10px;margin-top:20px;display:none;}
+#progress-bar {width:0%;height:15px;background:#00ff7f;border-radius:10px;transition:0.3s;}
+
+/* Footer */
+footer {margin-top:40px;font-size:0.9rem;color:#aaa;}
+</style>
+</head>
+<body>
+
+<div id="tsparticles"></div>
+
+<div class="container">
+  <div class="logo"></div>
+  <h1>Zipify - Ultimate ZIP Converter</h1>
+
+  <div id="drop-zone">Drag & Drop Files Here or Click to Select</div>
+  <input type="file" id="files" multiple style="display:none;">
+  <br>
+  <input type="text" id="zip-name" placeholder="Enter ZIP file name" value="converted">
+  <br>
+  <button onclick="createZip()">Create ZIP</button>
+
+  <div id="progress-container"><div id="progress-bar"></div></div>
+</div>
+
+<footer>© 2025 Zipify. All Rights Reserved.</footer>
+
+<script>
+// Particle Background
+tsParticles.load("tsparticles", {
+  particles: {number:{value:80,density:{enable:true,value_area:800}},color:{value:"#00ff7f"},shape:{type:"circle"},opacity:{value:0.5},size:{value:3},move:{enable:true,speed:2}}
+});
+
+// Drag & Drop
+const dropZone=document.getElementById('drop-zone');
+const fileInput=document.getElementById('files');
+
+dropZone.addEventListener('click',()=>fileInput.click());
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover');});
+dropZone.addEventListener('dragleave',e=>{e.preventDefault();dropZone.classList.remove('dragover');});
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');fileInput.files=e.dataTransfer.files;});
+
+// ZIP Creation
+async function createZip(){
+    if(fileInput.files.length===0){alert('Select files first!'); return;}
+    const zipName=document.getElementById('zip-name').value.trim() || 'converted';
+    const zip=new JSZip();
+    const progressContainer=document.getElementById('progress-container');
+    const progressBar=document.getElementById('progress-bar');
+    progressContainer.style.display='block'; progressBar.style.width='0%';
+
+    for(let i=0;i<fileInput.files.length;i++){
+        zip.file(fileInput.files[i].name,fileInput.files[i]);
+        progressBar.style.width=`${Math.floor(((i+1)/fileInput.files.length)*100)}%`;
+        await new Promise(r=>setTimeout(r,50)); // simulate progress
+    }
+
+    const content=await zip.generateAsync({type:"blob"});
+    const link=document.createElement('a');
+    link.href=URL.createObjectURL(content);
+    link.download=`${zipName}.zip`;
+    link.click();
+    progressContainer.style.display='none';
+}
+</script>
+
+</body>
+</html>
